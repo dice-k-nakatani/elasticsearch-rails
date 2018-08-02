@@ -62,38 +62,38 @@ module Elasticsearch
           # @see https://github.com/mongoid/mongoid/issues/1334
           # @see https://github.com/karmi/retire/pull/724
           #
-          # def __find_in_batches(options={}, &block)
-          #   options[:batch_size] ||= 1_000
-          #   # all.no_timeout.each_slice(options[:batch_size]) do |items|
-          #   xlen = all.count
-          #   xi = 0
-          #   xper = options[:batch_size]
-          #   xfr = 0
-          #   loop do
-          #     xfr = xi * xper
-          #     break if xfr >= xlen
-          #     items = asc(:_id).skip(xfr).limit(xper)
-          #     yield items
-          #     xi += 1
-          #   end
-          # end
-
           def __find_in_batches(options={}, &block)
-            items = []
-
-            all.no_timeout.each do |item|
-              items << item
-
-              if items.length % options[:batch_size] == 0
-                yield items
-                items = []
-              end
-            end
-
-            unless items.empty?
-               yield items
+            options[:batch_size] ||= 1_000
+            # all.no_timeout.each_slice(options[:batch_size]) do |items|
+            xlen = all.count
+            xi = 0
+            xper = options[:batch_size]
+            xfr = 0
+            loop do
+              xfr = xi * xper
+              break if xfr >= xlen
+              items = asc(:_id).skip(xfr).limit(xper)
+              yield items
+              xi += 1
             end
           end
+
+          # def __find_in_batches(options={}, &block)
+          #   items = []
+          # 
+          #   all.no_timeout.each do |item|
+          #     items << item
+          # 
+          #     if items.length % options[:batch_size] == 0
+          #       yield items
+          #       items = []
+          #     end
+          #   end
+          # 
+          #   unless items.empty?
+          #      yield items
+          #   end
+          # end
 
           def __transform
             lambda {|a|  { index: { _id: a.id.to_s, data: a.as_indexed_json } }}
